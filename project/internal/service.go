@@ -48,6 +48,22 @@ func (service *Service) Wait(req *protos.HealthCheckRequest, stream protos.Servi
 	}
 }
 
+func (service *Service) GetUsername(ctx context.Context, req *protos.GetUsernameRequest) (*protos.GetUsernameResponse, error) {
+	_ = req.GetId()
+
+	return &protos.GetUsernameResponse{
+		Firstname: "Mensur",
+		Lastname:  "Khalid",
+	}, nil
+}
+
+func (service *Service) State(ctx context.Context, req *protos.StateRequest) (*protos.StateResponse, error) {
+	_ = req.GetTemprature()
+	return &protos.StateResponse{
+		Status: "Solid",
+	}, nil
+}
+
 func (service *Service) determineStatus(serviceName string) protos.HealthCheckResponse_ServingStatus {
 	switch serviceName {
 	case "":

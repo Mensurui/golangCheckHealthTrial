@@ -1,0 +1,16 @@
+syntax="proto3";
+
+option go_package="github.com/Mensurui/golangCheckHealthTrial/protos";
+
+service Solid{
+  rpc State(StateRequest)
+  returns (StateResponse);
+}
+
+message StateRequest{
+  string temprature = 1;
+}
+
+message StateResponse{
+  string status = 1;
+}

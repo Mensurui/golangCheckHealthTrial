@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Service_Check_FullMethodName = "/Service/Check"
-	Service_Wait_FullMethodName  = "/Service/Wait"
+	Service_Check_FullMethodName       = "/Service/Check"
+	Service_Wait_FullMethodName        = "/Service/Wait"
+	Service_GetUsername_FullMethodName = "/Service/GetUsername"
 )
 
 // ServiceClient is the client API for Service service.
@@ -29,6 +30,7 @@ const (
 type ServiceClient interface {
 	Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	Wait(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[HealthCheckResponse], error)
+	GetUsername(ctx context.Context, in *GetUsernameRequest, opts ...grpc.CallOption) (*GetUsernameResponse, error)
 }
 
 type serviceClient struct {
@@ -68,12 +70,23 @@ func (c *serviceClient) Wait(ctx context.Context, in *HealthCheckRequest, opts .
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Service_WaitClient = grpc.ServerStreamingClient[HealthCheckResponse]
 
+func (c *serviceClient) GetUsername(ctx context.Context, in *GetUsernameRequest, opts ...grpc.CallOption) (*GetUsernameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUsernameResponse)
+	err := c.cc.Invoke(ctx, Service_GetUsername_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility.
 type ServiceServer interface {
 	Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	Wait(*HealthCheckRequest, grpc.ServerStreamingServer[HealthCheckResponse]) error
+	GetUsername(context.Context, *GetUsernameRequest) (*GetUsernameResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -89,6 +102,9 @@ func (UnimplementedServiceServer) Check(context.Context, *HealthCheckRequest) (*
 }
 func (UnimplementedServiceServer) Wait(*HealthCheckRequest, grpc.ServerStreamingServer[HealthCheckResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method Wait not implemented")
+}
+func (UnimplementedServiceServer) GetUsername(context.Context, *GetUsernameRequest) (*GetUsernameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUsername not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 func (UnimplementedServiceServer) testEmbeddedByValue()                 {}
@@ -140,6 +156,24 @@ func _Service_Wait_Handler(srv interface{}, stream grpc.ServerStream) error {
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Service_WaitServer = grpc.ServerStreamingServer[HealthCheckResponse]
 
+func _Service_GetUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsernameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).GetUsername(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Service_GetUsername_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).GetUsername(ctx, req.(*GetUsernameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -150,6 +184,10 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Check",
 			Handler:    _Service_Check_Handler,
+		},
+		{
+			MethodName: "GetUsername",
+			Handler:    _Service_GetUsername_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
